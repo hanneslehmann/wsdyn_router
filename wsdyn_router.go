@@ -68,7 +68,11 @@ func route(w http.ResponseWriter, r *http.Request, _ httprouter.Params, cfg clie
 				p=n.Value
 			}
 		}
-		request:="http://"+host + p +"/"+ splitted_path[2]
+		query:=""
+		if len (splitted_path) > 2 {
+		   query="/"+ splitted_path[2]
+		}
+		request:="http://"+host + p + query
 		log.Printf(request)
 		response, err := http.Get(request)
 		if err != nil {
@@ -86,22 +90,6 @@ func route(w http.ResponseWriter, r *http.Request, _ httprouter.Params, cfg clie
 	}
 }
 
-func test(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	body:= Entry {}
-	err:= json.NewDecoder(r.Body).Decode(&body)
-	if err != nil {
-		panic(err)
-	}
-	log.Println(r.Body)
-	log.Printf("Host %s", body.host)
-	log.Printf("URL %s", body.url)
-	path:= html.EscapeString(r.URL.Path)
-    fmt.Fprintf(w, "Requested: %q",path)
-}
-
-func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-    fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
-}
 
 
 func main() {
@@ -115,7 +103,5 @@ func main() {
     router.POST("/register", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {register(w, r, ps, cfg)})
 	router.GET("/services/*service", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {route(w, r, ps, cfg)})
 	router.POST("/services/*service", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {route(w, r, ps, cfg)})
-	router.GET("/hello/:name", Hello)
-	router.POST("/test/*test", test)
     log.Fatal(http.ListenAndServe(":6667", router))
 }
