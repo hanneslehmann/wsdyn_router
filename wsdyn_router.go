@@ -1,7 +1,6 @@
 package main
 
 import (
-    "fmt"
     "html"
     "log"
 	"time"
@@ -11,7 +10,6 @@ import (
 	"io/ioutil"
 	"github.com/coreos/etcd/Godeps/_workspace/src/golang.org/x/net/context"
     "github.com/coreos/etcd/client"
-	"encoding/json"
 )
 
 type Entry struct {
@@ -32,6 +30,17 @@ func register(w http.ResponseWriter, r *http.Request, _ httprouter.Params, cfg c
 	} else {
 	// print common key info
 		log.Printf("Set is done. Metadata is %q\n", resp)
+	}
+}
+
+func copyHeaders(dst, src http.Header) {
+	for k, _ := range dst {
+		dst.Del(k)
+	}
+	for k, vs := range src {
+		for _, v := range vs {
+			dst.Add(k, v)
+		}
 	}
 }
 
@@ -84,6 +93,7 @@ func route(w http.ResponseWriter, r *http.Request, _ httprouter.Params, cfg clie
 				log.Println(err)
 				http.Error(w, http.StatusText(500), 500)
 			} else {
+			    copyHeaders(r.Header,response.Header)
 				w.Write([]byte(b))
 			}
 		}
